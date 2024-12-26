@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
+use Illuminate\Support\Facades\DB;
 return new class extends Migration
 {
     /**
@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('invoice_id')->constrained('invoices')->onDelete('cascade');
+            $table->bigInteger('invoice_id');
             $table->string('invoice_number');
             $table->decimal('amount', 10, 2);
             $table->date('payment_date');
@@ -24,6 +24,8 @@ return new class extends Migration
             $table->date('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->bigInteger('created_by')->nullable();
             $table->bigInteger('modified_by')->nullable();
+            $table->foreign('invoice_id')->references('id')->on('invoices')->onDelete('cascade');
+
         });
     }
 

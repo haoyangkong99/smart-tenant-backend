@@ -15,7 +15,7 @@ class RoleController extends Controller
             return $this->getQueryAllNotFoundResponse();
         }
 
-        return response()->json($roles);
+        return $this->successfulQueryResponse($roles);
     }
 
     public function store(Request $request)
@@ -26,7 +26,7 @@ class RoleController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $role = Role::create([
@@ -34,7 +34,7 @@ class RoleController extends Controller
             'created_by' => $this->getCurrentUserId(),
         ]);
 
-        return response()->json(['message' => 'Role created successfully', 'role' => $role], 201);
+        return $this->successfulCreationResponse($role) ;
     }
 
     public function show($id)
@@ -42,7 +42,7 @@ class RoleController extends Controller
         $role = Role::find($id);
 
         if (!$role) {
-            return $this->getQueryIDNotFoundResponse('Role', $id);
+            return $this->successfulQueryResponse($role);
         }
 
         return response()->json($role);
@@ -58,7 +58,7 @@ class RoleController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $role->update([
@@ -66,7 +66,7 @@ class RoleController extends Controller
             'modified_by' => $this->getCurrentUserId(),
         ]);
 
-        return response()->json(['message' => 'Role updated successfully', 'role' => $role]);
+        return $this->successfulUpdateResponse($role);
     }
 
     public function destroy($id)

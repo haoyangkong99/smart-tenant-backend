@@ -18,7 +18,7 @@ class ExpenseController extends Controller
         if ($expenses->isEmpty()) {
             return $this->getQueryAllNotFoundResponse();
         }
-        return response()->json($expenses);
+        return $this->successfulQueryResponse($expenses);
 
     }
 
@@ -39,7 +39,7 @@ class ExpenseController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $validatedData = $validator->validated();
@@ -61,7 +61,7 @@ class ExpenseController extends Controller
                 'created_by' => $this->getCurrentUserId(),
             ]
         );
-        return response()->json(['message' => 'Expense created successfully', 'expense' => $expense], 201);
+        return $this->successfulCreationResponse($expense) ;
     }
 
     /**
@@ -96,7 +96,7 @@ class ExpenseController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $validatedData = $validator->validated();
@@ -116,7 +116,7 @@ class ExpenseController extends Controller
              'attachment'=>$request->attachment,
              'modified_by' => $this->getCurrentUserId(),
         ]);
-        return response()->json(['message' => 'Expense updated successfully', 'expense' => $expense]);
+        return $this->successfulUpdateResponse($expense);
     }
 
     /**
@@ -127,7 +127,7 @@ class ExpenseController extends Controller
         try {
             $expense = Expense::findOrFail($id);
             $expense->delete();
-            return response()->json(['message' => 'Expense deleted successfully']);
+            return $this->successfulDeleteResponse($id);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->getDeleteFailureResponse();

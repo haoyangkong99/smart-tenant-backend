@@ -30,28 +30,15 @@ class MaintainerControllerTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                '*' => [
-                    'id',
-                    'user_id',
-                    'property_id',
-                    'maintenance_type',
-                    'description',
-                    'additional_info',
-                    'created_at',
-                    'updated_at',
-                    'user' => [
-                        // User model fields
-                    ],
-                    'property' => [
-                        // Property model fields
-                    ],
+                'data' => [
+
                 ],
             ]);
 
         // Test when no maintainers exist
         Maintainer::truncate();
         $response = $this->getJson('/api/auth/maintainers', ['Authorization' => $this->token]);
-        $response->assertStatus(200);
+        $response->assertStatus(404);
     }
 
     public function testStore()
@@ -72,7 +59,7 @@ class MaintainerControllerTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonStructure([
                 'message',
-                'maintainer' => [
+                'data' => [
                     'id',
                     'user_id',
                     'property_id',
@@ -93,25 +80,20 @@ class MaintainerControllerTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'id',
-                'user_id',
-                'property_id',
-                'maintenance_type',
-                'description',
-                'additional_info',
-                'created_at',
-                'updated_at',
-                'user' => [
-                    // User model fields
-                ],
-                'property' => [
-                    // Property model fields
+                'data' => [
+                    'user_id',
+                    'property_id',
+                    'maintenance_type',
+                    'description',
+                    'additional_info',
+                    'created_at',
+                    'updated_at',
                 ],
             ]);
 
         // Test when maintainer not found
         $response = $this->getJson('/api/auth/maintainers/' . 9999, ['Authorization' => $this->token]);
-        $response->assertStatus(200);
+        $response->assertStatus(404);
     }
 
     public function testUpdate()

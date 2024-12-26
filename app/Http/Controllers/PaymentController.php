@@ -15,9 +15,9 @@ class PaymentController extends Controller
     {
         $payments = Payment::with('invoice')->get();
         if ($payments->isEmpty()) {
-            $this->getQueryAllNotFoundResponse();
+            return $this->getQueryAllNotFoundResponse();
          }
-        return response()->json($payments);
+         return $this->successfulQueryResponse($payments);
     }
 
     /**
@@ -37,11 +37,11 @@ class PaymentController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $payment = Payment::create($validator->validated());
-        return response()->json(['message' => 'Payment created successfully', 'payment' => $payment], 201);
+        return $this->successfulCreationResponse($payment) ;
     }
 
     /**
@@ -51,7 +51,7 @@ class PaymentController extends Controller
     {
         try {
             $payment = Payment::with('invoice')->findOrFail($id);
-            return response()->json($payment);
+            return $this->successfulQueryResponse($payment);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->getQueryIDNotFoundResponse('Payment',$id);
         }
@@ -77,11 +77,11 @@ class PaymentController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $payment->update($validator->validated());
-        return response()->json(['message' => 'Payment updated successfully', 'payment' => $payment]);
+        return $this->successfulUpdateResponse($payment);
     }
 
     /**
@@ -93,7 +93,7 @@ class PaymentController extends Controller
             $payment = Payment::findOrFail($id);
             $payment->delete();
 
-            return response()->json(['message' => 'Payment deleted successfully']);
+            return $this->successfulDeleteResponse($id);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e)
         {

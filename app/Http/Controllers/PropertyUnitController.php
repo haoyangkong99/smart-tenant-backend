@@ -13,10 +13,10 @@ class PropertyUnitController extends Controller
         $PropertyUnits = PropertyUnit::all();
 
         if ($PropertyUnits->isEmpty()) {
-           $this->getQueryAllNotFoundResponse();
+           return $this->getQueryAllNotFoundResponse();
         }
 
-        return response()->json($PropertyUnits);
+        return $this->successfulQueryResponse($PropertyUnits);
     }
    /**
     * Store a newly created PropertyUnit in storage.

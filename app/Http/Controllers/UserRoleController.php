@@ -16,7 +16,7 @@ class UserRoleController extends Controller
             return $this->getQueryAllNotFoundResponse();
         }
 
-        return response()->json($userRoles);
+        return $this->successfulQueryResponse($userRoles);
     }
 
     public function store(Request $request)
@@ -28,7 +28,7 @@ class UserRoleController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $userRole = UserRole::create([
@@ -38,14 +38,14 @@ class UserRoleController extends Controller
             'created_by' => $this->getCurrentUserId(),
         ]);
 
-        return response()->json(['message' => 'User Role created successfully', 'userRole' => $userRole], 201);
+        return $this->successfulCreationResponse($userRole) ;
     }
 
     public function show($id)
     {
         try {
             $userRole = UserRole::with(['user', 'role'])->findOrFail($id);
-            return response()->json($userRole);
+            return $this->successfulQueryResponse($userRole);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->getQueryIDNotFoundResponse('UserRole', $id);
         }
@@ -62,7 +62,7 @@ class UserRoleController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $userRole->update([
@@ -72,7 +72,7 @@ class UserRoleController extends Controller
             'modified_by' => $this->getCurrentUserId(),
         ]);
 
-        return response()->json(['message' => 'User Role updated successfully', 'userRole' => $userRole]);
+        return $this->successfulUpdateResponse($userRole);
     }
 
     public function destroy($id)
@@ -81,7 +81,7 @@ class UserRoleController extends Controller
             $userRole = UserRole::findOrFail($id);
             $userRole->delete();
 
-            return response()->json(['message' => 'User Role deleted successfully']);
+            return $this->successfulDeleteResponse($id);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->getDeleteFailureResponse();
         }

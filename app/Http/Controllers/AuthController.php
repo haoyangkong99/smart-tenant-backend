@@ -10,6 +10,7 @@ use App\Models\User;
 use Exception;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 class AuthController extends Controller
 {
 
@@ -17,35 +18,39 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8',
+                'phone_number'=>'required|string',
+            ]);
+            if ($validator->fails()) {
+                return $this->validationErrorResponse($validator->errors());
+            }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'phone_number'=>'required|string',
-        ]);
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            $admin = User::where('email','admin@gmail.com')->firstOrFail();
+            // Create the user
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'phone_number'=>  $request->phone_number,
+                'status'=>'ACTIVE',
+                'created_by'=> $this->getCurrentUserId(),
+            ]);
+            $token = Auth::guard('api')->login($user);
+            return $this->successfulRegistrationResponse($user,$token);
         }
-        $admin = User::where('email','admin@gmail.com')->firstOrFail();
-        // Create the user
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'phone_number'=>  $request->phone_number,
-            'status'=>'ACTIVE',
-            'created_by'=> $this->getCurrentUserId(),
-        ]);
-        $token = Auth::guard('api')->login($user);
-        return response()->json([
-            'message' => 'User registered successfully',
-            'user' => $user,
-            'authorisation' => [
-                'token' => $token,
-                'type' => 'bearer',
-            ]
-        ], 201);
+        catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e)
+        {
+            return $this->getQueryAllNotFoundResponse();
+        }
+        catch (Exception $e){
+            return $this->getGeneralExceptionResponse($e);
+        }
+
+
     }
     public function registerwithouttoken(Request $request)
     {
@@ -57,7 +62,7 @@ class AuthController extends Controller
             'phone_number'=>'required|string',
         ]);
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
         // Create the user
         $user = User::create([
@@ -69,14 +74,7 @@ class AuthController extends Controller
         ]);
         $token = Auth::guard('api')->login($user);
 
-        return response()->json([
-            'message' => 'User registered successfully',
-            'user' => $user,
-            'authorization' => [
-                'token' => $token,
-                'type' => 'bearer',
-            ]
-        ], 201);
+        return $this->successfulRegistrationResponse($user,$token);
     }
 
     // Login the user
@@ -96,15 +94,7 @@ class AuthController extends Controller
         }
 
         $user = Auth::guard('api')->user();
-        return response()->json([
-                'status' => 'success',
-                'user' => $user,
-                'authorization' => [
-                    'token' => $token,
-                    'type' => 'bearer',
-                ]
-            ]);
-
+        return $this->successfulLoginResponse($user,$token);
 
     }
 
@@ -113,11 +103,7 @@ class AuthController extends Controller
     {
         $user=Auth::user();
         Auth::guard('api')->logout();
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Successfully logged out',
-            'user' => Auth::user(),
-        ]);
+        return $this->successfulLogoutResponse($user);
     }
 /**
  * Refresh the user's token.
@@ -129,29 +115,16 @@ public function refresh()
 {
     // Ensure the user is authenticated
     if (!$user = Auth::guard('api')->user()) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Unauthorized or session expired. Please log in again.',
-        ], 401);
+        return $this->sessionExpiredResponse();
     }
 
     // Re-generate token
     try {
         $newToken = Auth::guard('api')->login($user);
 
-        return response()->json([
-            'status' => 'success',
-            'user' => $user,
-            'authorisation' => [
-                'token' => $newToken,
-                'type' => 'bearer',
-            ],
-        ]);
+        return $this->successfulRefreshTokenResponse($user,$newToken);
     } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Unable to refresh token. Please try again.',
-        ], 500);
+        return $this->getGeneralExceptionResponse($e);
     }
 }
 
@@ -161,30 +134,39 @@ public function refresh()
     {
         try {
             $user = Auth::user();
-            return response()->json(['user' => $user]);
+            return $this->successfulQueryResponse($user);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to retrieve user information'], 500);
+            return $this->getGeneralExceptionResponse($e);
+        }
+    }
+    public function userAll()
+    {
+        try {
+            $user = User::all();
+            return $this->successfulQueryResponse($user);
+        } catch (\Exception $e) {
+            return $this->getGeneralExceptionResponse($e);
         }
     }
     public function show($id){
 
         try {
-            $user = User::findOrFail($id);
-            return response()->json($user);
+            $user = User::where('id',$id)->firstOrFail();
+            return $this->successfulQueryResponse($user);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->getQueryIDNotFoundResponse('User',$id);
         }
     }
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::where('id',$id)->firstOrFail();
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'required|string|email',
             'phone_number' => 'required|string',
         ]);
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $user->update([
@@ -193,23 +175,23 @@ public function refresh()
             'phone_number' => $request->phone_number,
             'modified_by'=> $this->getCurrentUserId(),
         ]);
-        return response()->json(['message' => 'User updated successfully', 'user' => $user]);
+        return $this->successfulUpdateResponse($user);
     }
     public function changePassword (Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::where('id',$id)->firstOrFail();
         $validator = Validator::make($request->all(), [
             'password' => 'required|string|min:8'
 
         ]);
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $user->update([
             'password'=>Hash::make($request->password)
         ]);
-        return response()->json(['message' => 'Password updated successfully', 'user' => $user]);
+        return $this->successfulUpdatePasswordResponse($user);
 
 
     }

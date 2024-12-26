@@ -12,9 +12,9 @@ class InvoiceController extends Controller
     {
         $invoices = Invoice::with(['property', 'unit', 'items'])->get();
         if ($invoices->isEmpty()) {
-            $this->getQueryAllNotFoundResponse();
+            return $this->getQueryAllNotFoundResponse();
          }
-        return response()->json($invoices);
+         return $this->successfulQueryResponse($invoices);
     }
 
     public function store(Request $request)
@@ -31,11 +31,11 @@ class InvoiceController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $invoice = Invoice::create($validator->validated());
-        return response()->json(['message' => 'Invoice created successfully', 'invoice' => $invoice], 201);
+        return $this->successfulCreationResponse($invoice) ;
     }
 
     public function show($id)
@@ -66,11 +66,11 @@ class InvoiceController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $invoice->update($validator->validated());
-        return response()->json(['message' => 'Invoice updated successfully', 'invoice' => $invoice]);
+        return $this->successfulUpdateResponse($invoice);
     }
 
     public function destroy($id)
@@ -79,7 +79,7 @@ class InvoiceController extends Controller
             $invoice = Invoice::findOrFail($id);
             $invoice->delete();
 
-            return response()->json(['message' => 'Invoice deleted successfully']);
+            return $this->successfulDeleteResponse($id);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e)
         {

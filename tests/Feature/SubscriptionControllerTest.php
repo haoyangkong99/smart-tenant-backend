@@ -31,23 +31,14 @@ class SubscriptionControllerTest extends TestCase
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
-                    '*' => [
-                        'id',
-                        'title',
-                        'amount',
-                        'interval',
-                        'staff_limit',
-                        'property_limit',
-                        'tenant_limit',
-                        'created_at',
-                        'updated_at',
+                    'data' => [
                     ],
                 ]);
 
         // Test when no subscriptions exist
         SubscriptionPackage::truncate();
         $response = $this->getJson('/api/auth/subscriptions');
-        $response->assertStatus(200);
+        $response->assertStatus(404);
     }
 
     public function testStore()
@@ -66,7 +57,7 @@ class SubscriptionControllerTest extends TestCase
         $response->assertStatus(201)
                 ->assertJsonStructure([
                     'message',
-                    'subscription' => [
+                    'data' => [
                         'id',
                         'title',
                         'amount',
@@ -89,15 +80,17 @@ class SubscriptionControllerTest extends TestCase
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
-                    'id',
-                    'title',
-                    'amount',
-                    'interval',
-                    'staff_limit',
-                    'property_limit',
-                    'tenant_limit',
-                    'created_at',
-                    'updated_at',
+                    'data' => [
+                        'id',
+                        'title',
+                        'amount',
+                        'interval',
+                        'staff_limit',
+                        'property_limit',
+                        'tenant_limit',
+                        'created_at',
+                        'updated_at',
+                    ],
                 ]);
 
         // Test when subscription not found

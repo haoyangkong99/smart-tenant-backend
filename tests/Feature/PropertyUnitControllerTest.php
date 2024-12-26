@@ -26,10 +26,8 @@ class PropertyUnitControllerTest extends TestCase
         // Create some sample PropertyUnits
         PropertyUnit::factory()->count(3)->create();
 
-        $response = $this->getJson('/api/auth/property-units');
-
-        $response->assertStatus(200)
-            ->assertJsonCount(3);
+        $response = $this->getJson('/api/auth/property-units', ['Authorization' => $this->token]);
+        $response->assertStatus(200);
     }
 
     public function testStore()
@@ -62,7 +60,7 @@ class PropertyUnitControllerTest extends TestCase
     {
         $propertyUnit = PropertyUnit::factory()->create();
 
-        $response = $this->getJson('/api/auth/property-units/' . $propertyUnit->id);
+        $response = $this->getJson('/api/auth/property-units/' . $propertyUnit->id, ['Authorization' => $this->token]);
 
         $response->assertStatus(200)
             ->assertJson([

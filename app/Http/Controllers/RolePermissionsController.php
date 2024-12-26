@@ -15,7 +15,7 @@ class RolePermissionsController extends Controller
             return $this->getQueryAllNotFoundResponse();
         }
 
-        return response()->json($rolePermissions);
+        return $this->successfulQueryResponse($rolePermissions);
     }
 
     public function store(Request $request)
@@ -26,7 +26,7 @@ class RolePermissionsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $rolePermission = RolePermission::create([
@@ -35,18 +35,18 @@ class RolePermissionsController extends Controller
             'created_by' => $this->getCurrentUserId(),
         ]);
 
-        return response()->json(['message' => 'Role Permission created successfully', 'rolePermission' => $rolePermission], 201);
+        return $this->successfulCreationResponse($rolePermission) ;
     }
 
     public function show($id)
     {
-        $rolePermission = RolePermission::with(['user', 'role'])->find($id);
 
-        if (!$rolePermission) {
-            return $this->getQueryIDNotFoundResponse('RolePermission', $id);
+        try {
+            $rolePermission = RolePermission::findOrFail($id);
+            return $this->successfulQueryResponse($rolePermission);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->getQueryIDNotFoundResponse('RolePermission',$id);
         }
-
-        return response()->json($rolePermission);
     }
 
     public function update(Request $request, $id)
@@ -59,7 +59,7 @@ class RolePermissionsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $rolePermission->update([
@@ -68,19 +68,22 @@ class RolePermissionsController extends Controller
             'modified_by' => $this->getCurrentUserId(),
         ]);
 
-        return response()->json(['message' => 'Role Permission updated successfully', 'rolePermission' => $rolePermission]);
+        return $this->successfulUpdateResponse($rolePermission);
     }
 
     public function destroy($id)
     {
-        $rolePermission = RolePermission::find($id);
 
-        if (!$rolePermission) {
-            return $this->getQueryIDNotFoundResponse('RolePermission', $id);
+        try {
+            $rolePermission = RolePermission::find($id);
+            $rolePermission->delete();
+
+            return $this->successfulDeleteResponse($id);
         }
+        catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e)
+        {
+            return $this->getDeleteFailureResponse();
+        };
 
-        $rolePermission->delete();
-
-        return response()->json(['message' => 'Role Permission deleted successfully']);
     }
 }

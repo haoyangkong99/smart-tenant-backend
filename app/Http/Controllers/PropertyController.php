@@ -15,9 +15,9 @@ class PropertyController extends Controller
     {
         $properties = Property::all();
         if ($properties->isEmpty()) {
-            $this->getQueryAllNotFoundResponse();
+            return $this->getQueryAllNotFoundResponse();
          }
-        return response()->json($properties);
+         return $this->successfulQueryResponse($properties);
     }
 
     /**
@@ -39,7 +39,7 @@ class PropertyController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $validatedData = $validator->validated();
@@ -60,7 +60,7 @@ class PropertyController extends Controller
             'image' => $request->image,
             'created_by' => $this->getCurrentUserId(),
         ]);
-        return response()->json(['message' => 'Property created successfully', 'property' => $property], 201);
+        return $this->successfulCreationResponse($property) ;
     }
 
     /**
@@ -70,7 +70,7 @@ class PropertyController extends Controller
     {
         try {
             $property = Property::findOrFail($id);
-            return response()->json($property);
+            return $this->successfulQueryResponse($property);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->getQueryIDNotFoundResponse('Property',$id);
         }
@@ -98,7 +98,7 @@ class PropertyController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $validatedData = $validator->validated();
@@ -119,7 +119,7 @@ class PropertyController extends Controller
             'image' => $request->image,
             'modified_by' => $this->getCurrentUserId(),
         ]);
-        return response()->json(['message' => 'Property updated successfully', 'property' => $property]);
+        return $this->successfulUpdateResponse($property);
     }
 
     /**
@@ -131,7 +131,7 @@ class PropertyController extends Controller
             $property = Property::findOrFail($id);
             $property->delete();
 
-            return response()->json(['message' => 'Property deleted successfully']);
+            return $this->successfulDeleteResponse($id);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e)
         {

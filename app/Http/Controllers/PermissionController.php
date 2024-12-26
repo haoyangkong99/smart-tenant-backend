@@ -12,10 +12,7 @@ class PermissionController extends Controller
     public function index()
     {
         $permission_types=config('permissions');
-        if (empty($permissionTypes)) {
-            $this->getQueryAllNotFoundResponse();
-         }
 
-        return response()->json($permission_types);
+         return $this->successfulQueryResponse($permission_types);
     }
 }

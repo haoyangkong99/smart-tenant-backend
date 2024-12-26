@@ -15,7 +15,7 @@ class SubscriptionPackageController extends Controller
             return $this->getQueryAllNotFoundResponse();
         }
 
-        return response()->json($subscriptions);
+        return $this->successfulQueryResponse($subscriptions);
     }
 
     public function store(Request $request)
@@ -30,7 +30,7 @@ class SubscriptionPackageController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $subscription = SubscriptionPackage::create([
@@ -43,18 +43,19 @@ class SubscriptionPackageController extends Controller
             'created_by' => $this->getCurrentUserId(),
         ]);
 
-        return response()->json(['message' => 'Subscription package created successfully', 'subscription' => $subscription], 201);
+        return $this->successfulCreationResponse($subscription) ;
     }
 
     public function show($id)
     {
-        $subscription = SubscriptionPackage::find($id);
 
-        if (!$subscription) {
-            return $this->getQueryIDNotFoundResponse('SubscriptionPackage', $id);
+
+        try {
+            $subscription = SubscriptionPackage::find($id);
+            return $this->successfulQueryResponse($subscription);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return $this->getQueryIDNotFoundResponse('SubscriptionPackage',$id);
         }
-
-        return response()->json($subscription);
     }
 
     public function update(Request $request, $id)
@@ -71,7 +72,7 @@ class SubscriptionPackageController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $subscription->update([
@@ -84,19 +85,21 @@ class SubscriptionPackageController extends Controller
             'modified_by' => $this->getCurrentUserId(),
         ]);
 
-        return response()->json(['message' => 'Subscription package updated successfully', 'subscription' => $subscription]);
+        return $this->successfulUpdateResponse($subscription);
     }
 
     public function destroy($id)
     {
-        $subscription = SubscriptionPackage::find($id);
 
-        if (!$subscription) {
-            return $this->getQueryIDNotFoundResponse('SubscriptionPackage', $id);
+        try {
+            $subscription = SubscriptionPackage::find($id);
+            $subscription->delete();
+
+            return $this->successfulDeleteResponse($id);
         }
-
-        $subscription->delete();
-
-        return response()->json(['message' => 'Subscription package deleted successfully']);
+        catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e)
+        {
+            return $this->getDeleteFailureResponse();
+        };
     }
 }

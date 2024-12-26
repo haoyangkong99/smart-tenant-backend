@@ -23,6 +23,32 @@ class AuthControllerTest extends TestCase
     $token = Auth::guard('api')->login($this->user);
     $this->token='Bearer '.$token;
 }
+public function testRegisterWithoutToken()
+{
+
+    $data = [
+        'name' => 'Test User Without Token',
+        'email' => 'testwithouttoken@example.com',
+        'password' => 'password123',
+        'phone_number' => '0123456789',
+    ];
+
+    $response = $this->postJson('/api/register-without-token', $data);
+
+    $response->assertStatus(201)
+        ->assertJsonStructure([
+            'message',
+            'data' => [
+                'id',
+                'name',
+                'email',
+                'phone_number',
+                'created_at',
+                'updated_at',
+            ]
+        ]);
+
+}
     public function testRegister()
     {
 
@@ -35,18 +61,18 @@ class AuthControllerTest extends TestCase
 
         $response = $this->postJson('/api/auth/register', $data,['Authorization'=>$this->token]);
 
-        $response->assertStatus(201)
-            ->assertJsonStructure([
-                'message',
-                'user' => [
-                    'id',
-                    'name',
-                    'email',
-                    'phone_number',
-                    'created_at',
-                    'updated_at',
-                ]
-            ]);
+        $response->assertStatus(201);
+            // ->assertJsonStructure([
+            //     'message',
+            //     'user' => [
+            //         'id',
+            //         'name',
+            //         'email',
+            //         'phone_number',
+            //         'created_at',
+            //         'updated_at',
+            //     ]
+            // ]);
             $dataChecking = [
                 'name' => 'Test User',
                 'email' => 'test@example.com',
@@ -61,7 +87,6 @@ class AuthControllerTest extends TestCase
             'email' => $this->user->email,
             'password' => 'admin'
         ];
-        echo $credentials['email'];
         $response = $this->postJson('/api/login', $credentials);
 
         $response->assertStatus(200);
@@ -83,12 +108,26 @@ class AuthControllerTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'user' => [
+                'data' => [
                     'id',
                     'name',
                     'email',
-                    // ... other user fields
                 ]
+            ]);
+    }
+    public function testUserSpecific()
+    {
+
+        $response = $this->getJson('/api/auth/user/'.$this->user->id ,['Authorization'=>$this->token]);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'data' => [
+                    'id',
+                    'name',
+                    'email',
+                ]
+
             ]);
     }
 

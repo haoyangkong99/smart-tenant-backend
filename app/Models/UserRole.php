@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class UserRole extends Model
 {
     use HasFactory;
+    protected $table = 'user_roles';
     protected $fillable = [
         'parent_user_id',
         'user_id',

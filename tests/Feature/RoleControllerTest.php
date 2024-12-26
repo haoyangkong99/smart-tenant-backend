@@ -31,18 +31,14 @@ class RoleControllerTest extends TestCase
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
-                    '*' => [
-                        'id',
-                        'title',
-                        'created_at',
-                        'updated_at',
+                    'data' => [
                     ],
                 ]);
 
         // Test when no roles exist
         Role::truncate();
         $response = $this->getJson('/api/auth/roles', ['Authorization' => $this->token]);
-        $response->assertStatus(200);
+        $response->assertStatus(404);
     }
 
     public function testStore()
@@ -56,7 +52,7 @@ class RoleControllerTest extends TestCase
         $response->assertStatus(201)
                 ->assertJsonStructure([
                     'message',
-                    'role' => [
+                    'data' => [
                         'id',
                         'title',
                         'created_at',

@@ -17,10 +17,10 @@
              $contacts = Contact::all();
 
              if ($contacts->isEmpty()) {
-                $this->getQueryAllNotFoundResponse();
+               return $this->getQueryAllNotFoundResponse();
              }
 
-             return response()->json($contacts);
+             return $this->successfulQueryResponse($contacts);
          }
         /**
          * Store a newly created contact in storage.
@@ -38,7 +38,8 @@
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
+                return $this->validationErrorResponse($validator->errors());
+
             }
 
             $contact = Contact::create([
@@ -51,7 +52,7 @@
                 'created_by' => $this->getCurrentUserId(),
             ]);
 
-            return response()->json(['message' => 'Contact created successfully', 'contact' => $contact], 201);
+            return $this->successfulCreationResponse($contact) ;
         }
 
         /**
@@ -61,7 +62,7 @@
         {
             try {
                 $contact = Contact::findOrFail($id);
-                return response()->json($contact);
+                return $this->successfulQueryResponse($contact);
             } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
                 return $this->getQueryIDNotFoundResponse('Contact',$id);
             }
@@ -85,7 +86,7 @@
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
+                return $this->validationErrorResponse($validator->errors());
             }
 
             $contact->update([
@@ -98,7 +99,7 @@
                 'modified_by' => $this->getCurrentUserId(),
             ]);
 
-            return response()->json(['message' => 'Contact updated successfully', 'contact' => $contact]);
+            return $this->successfulUpdateResponse($contact);
         }
 
         /**
@@ -110,7 +111,7 @@
                 $contact = Contact::findOrFail($id);
                 $contact->delete();
 
-                return response()->json(['message' => 'Contact deleted successfully']);
+                return $this->successfulDeleteResponse($id);
             }
             catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e)
             {

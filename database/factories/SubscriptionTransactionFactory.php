@@ -20,7 +20,7 @@ class SubscriptionTransactionFactory extends Factory
         return [
             //
             'user_id' => User::factory()->create()->id,
-            'package_id' => SubscriptionPackage::factory()->create()->id,
+            'package_id' => SubscriptionPackage::factory()->create(),
             'amount' => 100.00,
             'payment_type' => 'Credit Card',
             'payment_status' => 'SUCCESS',

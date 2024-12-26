@@ -19,8 +19,7 @@ class PermissionControllerTest extends TestCase
     }
     public function testIndex()
     {
-        $response = $this->getJson('/api/auth/permissions');
-        echo $response->getContent();
+        $response = $this->getJson('/api/auth/permissions',['Authorization' => $this->token]);
         $response->assertStatus(200);
     }
 }

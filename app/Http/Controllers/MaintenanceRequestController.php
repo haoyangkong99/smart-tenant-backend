@@ -10,17 +10,17 @@ class MaintenanceRequestController extends Controller
 {
     public function index()
     {
-        $requests = MaintenanceRequest::with(['property', 'unit', 'maintainer'])->get();
+        $requests = MaintenanceRequest::all();
         if ($requests->isEmpty()) {
-            $this->getQueryAllNotFoundResponse();
+            return $this->getQueryAllNotFoundResponse();
          }
-        return response()->json($requests);
+         return $this->successfulQueryResponse($requests);
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'property_id' => 'required|exists:properties,id',
+            'property_id' => 'required|exists:property,id',
             'unit_id' => 'required|exists:property_units,id',
             'maintainer_id' => 'required|exists:maintainers,id',
             'issue_type' => 'required|string',
@@ -30,7 +30,7 @@ class MaintenanceRequestController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $validatedData = $validator->validated();
@@ -40,7 +40,7 @@ class MaintenanceRequestController extends Controller
         }
 
         $maintenanceRequest = MaintenanceRequest::create($validatedData);
-        return response()->json(['message' => 'Maintenance Request created successfully', 'maintenanceRequest' => $maintenanceRequest], 201);
+        return $this->successfulCreationResponse($maintenanceRequest) ;
     }
 
     public function show($id)
@@ -59,7 +59,7 @@ class MaintenanceRequestController extends Controller
         $maintenanceRequest = MaintenanceRequest::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'property_id' => 'required|exists:properties,id',
+            'property_id' => 'required|exists:property,id',
             'unit_id' => 'required|exists:property_units,id',
             'maintainer_id' => 'required|exists:maintainers,id',
             'issue_type' => 'required|string',
@@ -79,7 +79,7 @@ class MaintenanceRequestController extends Controller
         }
 
         $maintenanceRequest->update($validatedData);
-        return response()->json(['message' => 'Maintenance Request updated successfully', 'maintenanceRequest' => $maintenanceRequest]);
+        return $this->successfulUpdateResponse($maintenanceRequest);
     }
 
     public function destroy($id)
@@ -88,7 +88,7 @@ class MaintenanceRequestController extends Controller
             $maintenanceRequest = MaintenanceRequest::findOrFail($id);
             $maintenanceRequest->delete();
 
-            return response()->json(['message' => 'Maintenance Request deleted successfully']);
+            return $this->successfulDeleteResponse($id);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e)
         {

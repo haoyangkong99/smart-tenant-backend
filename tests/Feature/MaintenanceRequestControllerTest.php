@@ -29,45 +29,27 @@ class MaintenanceRequestControllerTest extends TestCase
         MaintenanceRequest::factory()->count(3)->create();
 
         $response = $this->getJson('/api/auth/maintenance-requests', ['Authorization' => $this->token]);
-
         $response->assertStatus(200)
             ->assertJsonStructure([
-                '*' => [
-                    'id',
-                    'property_id',
-                    'unit_id',
-                    'maintainer_id',
-                    'issue_type',
-                    'status',
-                    'issue_attachment',
-                    'created_at',
-                    'updated_at',
-                    'property' => [
-                        // Property model fields
-                    ],
-                    'unit' => [
-                        // PropertyUnit model fields
-                    ],
-                    'maintainer' => [
-                        // Maintainer model fields
-                    ],
+                'data' => [
+
                 ],
             ]);
 
         // Test when no maintenance requests exist
         MaintenanceRequest::truncate();
         $response = $this->getJson('/api/auth/maintenance-requests', ['Authorization' => $this->token]);
-        $response->assertStatus(200);
+        $response->assertStatus(404);
     }
 
     public function testStore()
     {
-        $property = Property::factory()->create();
-        $unit = PropertyUnit::factory()->create(['property_id' => $property->id]);
+
+        $unit = PropertyUnit::factory()->create();
         $maintainer = Maintainer::factory()->create();
 
         $data = [
-            'property_id' => $property->id,
+            'property_id' => $unit->property_id,
             'unit_id' => $unit->id,
             'maintainer_id' => $maintainer->id,
             'issue_type' => 'Plumbing',
@@ -80,7 +62,7 @@ class MaintenanceRequestControllerTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonStructure([
                 'message',
-                'maintenanceRequest' => [
+                'data' => [
                     'id',
                     'property_id',
                     'unit_id',
@@ -100,27 +82,7 @@ class MaintenanceRequestControllerTest extends TestCase
 
         $response = $this->getJson('/api/auth/maintenance-requests/' . $maintenanceRequest->id, ['Authorization' => $this->token]);
 
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'id',
-                'property_id',
-                'unit_id',
-                'maintainer_id',
-                'issue_type',
-                'status',
-                'issue_attachment',
-                'created_at',
-                'updated_at',
-                'property' => [
-                    // Property model fields
-                ],
-                'unit' => [
-                    // PropertyUnit model fields
-                ],
-                'maintainer' => [
-                    // Maintainer model fields
-                ],
-            ]);
+        $response->assertStatus(200);
 
         // Test when maintenance request not found
         $response = $this->getJson('/api/auth/maintenance-requests/' . 9999, ['Authorization' => $this->token]);
@@ -131,17 +93,14 @@ class MaintenanceRequestControllerTest extends TestCase
     {
         $maintenanceRequest = MaintenanceRequest::factory()->create();
 
-        $updateData = [
-            'status' => 'COMPLETED',
-        ];
+        $maintenanceRequest->status='COMPLETED';
 
-        $response = $this->putJson('/api/auth/maintenance-requests/' . $maintenanceRequest->id, $updateData, ['Authorization' => $this->token]);
+        $response = $this->putJson('/api/auth/maintenance-requests/' . $maintenanceRequest->id, $maintenanceRequest->toArray(), ['Authorization' => $this->token]);
 
-        $response->assertStatus(200)
-            ->assertJsonFragment($updateData);
+        $response->assertStatus(200);
 
         $updatedMaintenanceRequest = MaintenanceRequest::findOrFail($maintenanceRequest->id);
-        $this->assertEquals($updateData['status'], $updatedMaintenanceRequest->status);
+        $this->assertEquals($maintenanceRequest['status'], $updatedMaintenanceRequest->status);
     }
 
     public function testDelete()

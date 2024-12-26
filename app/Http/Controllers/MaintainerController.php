@@ -13,9 +13,9 @@ class MaintainerController extends Controller
     {
         $maintainers = Maintainer::with(['user', 'property'])->get();
         if ($maintainers->isEmpty()) {
-            $this->getQueryAllNotFoundResponse();
+            return $this->getQueryAllNotFoundResponse();
          }
-        return response()->json($maintainers);
+         return $this->successfulQueryResponse($maintainers);
     }
 
     public function store(Request $request)
@@ -29,7 +29,7 @@ class MaintainerController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $maintainer = Maintainer::create([
@@ -40,14 +40,14 @@ class MaintainerController extends Controller
             'additional_info' => $request->additional_info,
             'created_by' => $this->getCurrentUserId(),
         ]);
-        return response()->json(['message' => 'Maintainer created successfully', 'maintainer' => $maintainer], 201);
+        return $this->successfulCreationResponse($maintainer) ;
     }
 
     public function show($id)
     {
         try {
             $maintainer = Maintainer::with(['user', 'property'])->findOrFail($id);
-            return response()->json($maintainer);
+            return $this->successfulQueryResponse($maintainer);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->getQueryIDNotFoundResponse('Maintainer',$id);
         }
@@ -68,7 +68,7 @@ class MaintainerController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $maintainer->update([
@@ -79,7 +79,7 @@ class MaintainerController extends Controller
             'additional_info' => $request->additional_info,
             'modified_by' => $this->getCurrentUserId(),
         ]);
-        return response()->json(['message' => 'Maintainer updated successfully', 'maintainer' => $maintainer]);
+        return $this->successfulUpdateResponse($maintainer);
     }
 
     public function destroy($id)
@@ -88,7 +88,7 @@ class MaintainerController extends Controller
             $maintainer = Maintainer::findOrFail($id);
             $maintainer->delete();
 
-            return response()->json(['message' => 'Maintainer deleted successfully']);
+            return $this->successfulDeleteResponse($id);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e)
         {

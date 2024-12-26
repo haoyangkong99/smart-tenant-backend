@@ -19,13 +19,8 @@ class AuthenticateMiddleware
     {
         try {
             // Attempt to authenticate the user using the API guard
-            if (!Auth::guard('api')->attempt($request->only('email', 'password'))) {
-                throw new ValidationException($request, [
-                    'message' => 'Invalid Credentials'
-                ]);
-            }
-            else
-            {
+            $token =Auth::guard('api')->attempt($request->only('email', 'password'));
+            if (!$token){
                 return $next($request);
             }
 

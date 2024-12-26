@@ -13,9 +13,9 @@ class GeneralSettingController extends Controller
     {
         $settings = GeneralSetting::all();
         if ($settings->isEmpty()) {
-            $this->getQueryAllNotFoundResponse();
+            return $this->getQueryAllNotFoundResponse();
          }
-        return response()->json($settings);
+         return $this->successfulQueryResponse($settings);
     }
 
     public function store(Request $request)
@@ -27,7 +27,7 @@ class GeneralSettingController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $validatedData = $validator->validated();
@@ -43,7 +43,7 @@ class GeneralSettingController extends Controller
             'logo' =>  $request->logo,
             'landing_page_logo' =>  $request->landing_page_logo,
         ]);
-        return response()->json(['message' => 'Setting created successfully', 'setting' => $setting], 201);
+        return $this->successfulCreationResponse($setting) ;
     }
 
     public function update(Request $request, $id)
@@ -57,7 +57,7 @@ class GeneralSettingController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $validatedData = $validator->validated();
@@ -71,6 +71,6 @@ class GeneralSettingController extends Controller
         }
 
         $setting->update($validatedData);
-        return response()->json(['message' => 'Setting updated successfully', 'setting' => $setting]);
+        return $this->successfulUpdateResponse($setting);
     }
 }

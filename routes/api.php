@@ -9,6 +9,7 @@ use App\Http\Controllers\{
     GeneralSettingController,
     InvoiceController,
     MaintainerController,
+    MaintenanceRequestController,
     PaymentController,
     PermissionController,
     PropertyController,
@@ -24,6 +25,8 @@ use App\Models\MaintenanceRequest;
 
 Route::post('/register-without-token', [AuthController::class, 'registerwithouttoken']);
 Route::post('/login', [AuthController::class, 'login']);
+
+
 // Protected Routes (Require authentication)
 Route::prefix('auth')->group(function () {
 Route::middleware('auth:api')->group(function(){
@@ -31,7 +34,8 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/refresh', [AuthController::class, 'refresh']);
 Route::get('/permissions', [PermissionController::class, 'index']);
-    Route::get('/user', [AuthController::class, 'user']);
+Route::get('/user', [AuthController::class, 'user']);
+Route::get('/user-all', [AuthController::class, 'userAll']);
     Route::get('/user/{id}', [AuthController::class, 'show']);
     Route::put('/user/{id}', [AuthController::class, 'update']);       // Update user details
     Route::put('/user/{id}/change-password', [AuthController::class, 'changePassword']); // Change password
@@ -51,7 +55,7 @@ Route::get('/permissions', [PermissionController::class, 'index']);
         'payments' => PaymentController::class,
         'role-permissions' => RolePermissionsController::class,
         'user-roles' => UserRoleController::class,
-        'maintenance-requests'=>MaintenanceRequest::class
+        'maintenance-requests'=>MaintenanceRequestController::class
     ]);
 });
 

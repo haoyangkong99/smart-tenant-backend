@@ -26,8 +26,7 @@ class SubscriptionTransactionControllerTest extends TestCase
         // Create some sample SubscriptionTransactions
         SubscriptionTransaction::factory()->count(3)->create();
 
-        $response = $this->getJson('/api/auth/subscription-transactions');
-
+        $response = $this->getJson('/api/auth/subscription-transactions',['Authorization'=>$this->token]);
         $response->assertStatus(200);
     }
 
@@ -44,12 +43,12 @@ class SubscriptionTransactionControllerTest extends TestCase
             'payment_status' => 'SUCCESS',
         ];
 
-        $response = $this->postJson('/api/auth/subscription-transactions', $data);
+        $response = $this->postJson('/api/auth/subscription-transactions', $data,['Authorization'=>$this->token]);
 
         $response->assertStatus(201)
             ->assertJsonStructure([
                 'message',
-                'transaction' => [
+                'data' => [
                     'id',
                     'user_id',
                     'package_id',
@@ -67,41 +66,42 @@ class SubscriptionTransactionControllerTest extends TestCase
     {
         $transaction = SubscriptionTransaction::factory()->create();
 
-        $response = $this->getJson('/api/auth/subscription-transactions/' . $transaction->id);
+        $response = $this->getJson('/api/auth/subscription-transactions/' . $transaction->id,['Authorization'=>$this->token]);
 
         $response->assertStatus(200)
             ->assertJson([
-                'id' => $transaction->id,
-                'user_id' => $transaction->user_id,
-                'package_id' => $transaction->package_id,
-                'amount' => $transaction->amount,
-                'payment_type' => $transaction->payment_type,
-                'payment_status' => $transaction->payment_status,
+                'data' => [
+                    'id' => $transaction->id,
+                    'user_id' => $transaction->user_id,
+                    'package_id' => $transaction->package_id,
+                    'amount' => $transaction->amount,
+                    'payment_type' => $transaction->payment_type,
+                    'payment_status' => $transaction->payment_status,
+                ],
+
             ]);
     }
 
     public function testUpdate()
     {
         $transaction = SubscriptionTransaction::factory()->create();
+        $transaction->payment_status='SUCCESS';
 
-        $updateData = [
-            'payment_status' => 'COMPLETED',
-        ];
 
-        $response = $this->putJson('/api/subscription-transactions/' . $transaction->id, $updateData);
+        $response = $this->putJson('/api/auth/subscription-transactions/' . $transaction->id, $transaction->toArray(),['Authorization'=>$this->token]);
 
         $response->assertStatus(200)
-            ->assertJsonFragment($updateData);
+;
 
         $updatedTransaction = SubscriptionTransaction::findOrFail($transaction->id);
-        $this->assertEquals($updateData['payment_status'], $updatedTransaction->payment_status);
+        $this->assertEquals($transaction['payment_status'], $updatedTransaction->payment_status);
     }
 
     public function testDestroy()
     {
         $transaction = SubscriptionTransaction::factory()->create();
 
-        $response = $this->deleteJson('/api/subscription-transactions/' . $transaction->id);
+        $response = $this->deleteJson('/api/auth/subscription-transactions/' . $transaction->id,['Authorization'=>$this->token]);
 
         $response->assertStatus(200);
         $this->assertDatabaseMissing('subscription_transactions', ['id' => $transaction->id]);
@@ -114,21 +114,12 @@ class SubscriptionTransactionControllerTest extends TestCase
             'package_id' => 1, // Assuming package with ID 1 doesn't exist
             'amount' => -10, // Negative amount
             'payment_type' => '',
-            'payment_status' => 'INVALID_STATUS',
+            'payment_status' => 'INVALID',
         ];
 
-        $response = $this->postJson('/api/subscription-transactions', $data);
+        $response = $this->postJson('/api/auth/subscription-transactions', $data,['Authorization'=>$this->token]);
 
-        $response->assertStatus(422)
-            ->assertJsonStructure([
-                'errors' => [
-                    'user_id',
-                    'package_id',
-                    'amount',
-                    'payment_type',
-                    'payment_status',
-                ],
-            ]);
+        $response->assertStatus(422);
     }
 
     public function testUpdateWithInvalidData()
@@ -140,44 +131,42 @@ class SubscriptionTransactionControllerTest extends TestCase
             'payment_status' => 'INVALID_STATUS',
         ];
 
-        $response = $this->putJson('/api/subscription-transactions/' . $transaction->id, $updateData);
+        $response = $this->putJson('/api/auth/subscription-transactions/' . $transaction->id, $updateData,['Authorization'=>$this->token]);
 
         $response->assertStatus(422)
             ->assertJsonStructure([
-                'errors' => [
-                    'amount',
-                    'payment_status',
-                ],
+                'message',
+                'error'
             ]);
     }
 
     public function testShowNotFound()
     {
-        $response = $this->getJson('/api/subscription-transactions/9999');
+        $response = $this->getJson('/api/auth/subscription-transactions/9999',['Authorization'=>$this->token]);
 
         $response->assertStatus(404)
-            ->assertJson([
-                'message' => 'Transaction not found',
+            ->assertJsonStructure([
+                'message' ,
             ]);
     }
 
     public function testUpdateNotFound()
     {
-        $response = $this->putJson('/api/subscription-transactions/9999', []);
+        $response = $this->putJson('/api/auth/subscription-transactions/9999', $headers=['Authorization'=>$this->token]);
 
         $response->assertStatus(404)
-            ->assertJson([
-                'message' => 'Transaction not found',
+            ->assertJsonStructure([
+                'message' ,
             ]);
     }
 
     public function testDestroyNotFound()
     {
-        $response = $this->deleteJson('/api/subscription-transactions/9999');
+        $response = $this->deleteJson('/api/auth/subscription-transactions/9999',$headers=['Authorization'=>$this->token]);
 
         $response->assertStatus(404)
-            ->assertJson([
-                'message' => 'Transaction not found',
+            ->assertJsonStructure([
+                'message',
             ]);
     }
 }

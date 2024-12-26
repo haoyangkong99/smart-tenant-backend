@@ -16,7 +16,7 @@ class TenantController extends Controller
             return $this->getQueryAllNotFoundResponse();
         }
 
-        return response()->json($tenants);
+        return $this->successfulQueryResponse($tenants);
     }
 
     public function store(Request $request)
@@ -27,7 +27,7 @@ class TenantController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $tenant = Tenant::create([
@@ -36,14 +36,14 @@ class TenantController extends Controller
             'created_by' => $this->getCurrentUserId(),
         ]);
 
-        return response()->json(['message' => 'Tenant created successfully', 'tenant' => $tenant], 201);
+        return $this->successfulCreationResponse($tenant) ;
     }
 
     public function show($id)
     {
         try {
             $tenant = Tenant::with('user')->findOrFail($id);
-            return response()->json($tenant);
+            return $this->successfulQueryResponse($tenant);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->getQueryIDNotFoundResponse('Tenant', $id);
         }
@@ -59,7 +59,7 @@ class TenantController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $tenant->update([
@@ -68,7 +68,7 @@ class TenantController extends Controller
             'modified_by' => $this->getCurrentUserId(),
         ]);
 
-        return response()->json(['message' => 'Tenant updated successfully', 'tenant' => $tenant]);
+        return $this->successfulUpdateResponse($tenant);
     }
 
     public function destroy($id)
@@ -77,7 +77,7 @@ class TenantController extends Controller
             $tenant = Tenant::findOrFail($id);
             $tenant->delete();
 
-            return response()->json(['message' => 'Tenant deleted successfully']);
+            return $this->successfulDeleteResponse($id);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->getDeleteFailureResponse();
         }

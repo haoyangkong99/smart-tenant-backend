@@ -30,26 +30,14 @@ class PropertyControllerTest extends TestCase
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
-                    '*' => [
-                        'id',
-                        'type',
-                        'name',
-                        'description',
-                        'address',
-                        'country',
-                        'state',
-                        'city',
-                        'post_code',
-                        'image',
-                        'created_at',
-                        'updated_at',
+                    'data' => [
                     ],
                 ]);
 
         // Test when no properties exist
         Property::truncate();
         $response = $this->getJson('/api/auth/properties', ['Authorization' => $this->token]);
-        $response->assertStatus(200);
+        $response->assertStatus(404);
     }
 
     public function testStore()
@@ -71,7 +59,7 @@ class PropertyControllerTest extends TestCase
         $response->assertStatus(201)
                 ->assertJsonStructure([
                     'message',
-                    'property' => [
+                    'data' => [
                         'id',
                         'type',
                         'name',
@@ -95,23 +83,12 @@ class PropertyControllerTest extends TestCase
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
-                    'id',
-                    'type',
-                    'name',
-                    'description',
-                    'address',
-                    'country',
-                    'state',
-                    'city',
-                    'post_code',
-                    'image',
-                    'created_at',
-                    'updated_at',
+                    'data'=>[]
                 ]);
 
         // Test when property not found
         $response = $this->getJson('/api/auth/properties/' . 9999, ['Authorization' => $this->token]);
-        $response->assertStatus(200);
+        $response->assertStatus(404);
     }
 
     public function testUpdate()

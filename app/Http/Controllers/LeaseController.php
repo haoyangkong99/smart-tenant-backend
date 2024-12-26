@@ -13,15 +13,15 @@ class LeaseController extends Controller
     {
         $leases = Lease::with(['property', 'unit', 'tenant'])->get();
         if ($leases->isEmpty()) {
-            $this->getQueryAllNotFoundResponse();
+            return $this->getQueryAllNotFoundResponse();
          }
-        return response()->json($leases);
+         return $this->successfulQueryResponse($leases);
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'property_id' => 'required|exists:properties,id',
+            'property_id' => 'required|exists:property,id',
             'unit_id' => 'required|exists:property_units,id',
             'tenant_id' => 'required|exists:tenants,id',
             'lease_number' => 'required|string|unique:leases,lease_number',
@@ -38,7 +38,7 @@ class LeaseController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $validatedData = $validator->validated();
@@ -48,14 +48,14 @@ class LeaseController extends Controller
         }
 
         $lease = Lease::create($validatedData);
-        return response()->json(['message' => 'Lease created successfully', 'lease' => $lease], 201);
+        return $this->successfulCreationResponse($lease);
     }
 
     public function show($id)
     {
         try {
             $lease = Lease::with(['property', 'unit', 'tenant'])->findOrFail($id);
-            return response()->json($lease);
+            return $this->successfulQueryResponse($lease);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->getQueryIDNotFoundResponse('Lease',$id);
         }
@@ -67,7 +67,7 @@ class LeaseController extends Controller
         $lease = Lease::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
-            'property_id' => 'required|exists:properties,id',
+            'property_id' => 'required|exists:property,id',
             'unit_id' => 'required|exists:property_units,id',
             'tenant_id' => 'required|exists:tenants,id',
             'lease_number' => 'required|string|unique:leases,lease_number,' . $id,
@@ -84,7 +84,7 @@ class LeaseController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return $this->validationErrorResponse($validator->errors());
         }
 
         $validatedData = $validator->validated();
@@ -94,7 +94,7 @@ class LeaseController extends Controller
         }
 
         $lease->update($validatedData);
-        return response()->json(['message' => 'Lease updated successfully', 'lease' => $lease]);
+        return $this->successfulUpdateResponse($lease);
     }
 
     public function destroy($id)
@@ -103,7 +103,7 @@ class LeaseController extends Controller
             $lease = Lease::findOrFail($id);
             $lease->delete();
 
-            return response()->json(['message' => 'Lease deleted successfully']);
+            return $this->successfulDeleteResponse($id);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e)
         {

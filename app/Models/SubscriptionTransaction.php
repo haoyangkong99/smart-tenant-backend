@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class SubscriptionTransaction extends Model
 {
     use HasFactory;
+    protected $table = 'subscription_transactions';
     protected $fillable = [
         'user_id',
         'package_id',
@@ -26,7 +27,7 @@ class SubscriptionTransaction extends Model
 
     public function package()
     {
-        return $this->belongsTo(SubscriptionPackage::class, 'package_id');
+        return $this->belhongsTo(SubscriptionPackage::class, 'package_id');
     }
 }
 ?>

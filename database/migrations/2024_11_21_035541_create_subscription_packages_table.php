@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
+use Illuminate\Support\Facades\DB;
 return new class extends Migration
 {
     /**
@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('subscription_packages', function (Blueprint $table) {
-            $table->id(); // Primary Key
+            $table->id();
             $table->string('title');
             $table->double('amount');
             $table->integer('interval');
@@ -23,6 +23,7 @@ return new class extends Migration
             $table->date('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->bigInteger('created_by')->nullable();
             $table->bigInteger('modified_by')->nullable();
+
         });
     }
 

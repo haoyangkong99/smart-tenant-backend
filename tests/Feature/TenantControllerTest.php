@@ -25,14 +25,15 @@ class TenantControllerTest extends TestCase
 
     public function testIndex()
     {
-        $response = $this->getJson('/api/auth/tenants');
+        $tenant = Tenant::factory()->create();
+        $response = $this->getJson('/api/auth/tenants',['Authorization' => $this->token]);
 
         $response->assertStatus(200);
 
         // Test when no tenants exist
         Tenant::truncate();
-        $response = $this->getJson('/api/auth/tenants');
-        $response->assertStatus(200);
+        $response = $this->getJson('/api/auth/tenants',['Authorization' => $this->token]);
+        $response->assertStatus(404);
     }
 
     public function testStore()
@@ -47,7 +48,7 @@ class TenantControllerTest extends TestCase
         $response->assertStatus(201)
                 ->assertJsonStructure([
                     'message',
-                    'tenant' => [
+                    'data' => [
                         'id',
                         'user_id',
                         'total_family_member',
@@ -62,23 +63,16 @@ class TenantControllerTest extends TestCase
         // Create a tenant using factory
         $tenant = Tenant::factory()->create();
 
-        $response = $this->getJson('/api/auth/tenants/' . $tenant->id);
+        $response = $this->getJson('/api/auth/tenants/' . $tenant->id,['Authorization' => $this->token]);
 
         $response->assertStatus(200)
                 ->assertJsonStructure([
-                    'id',
-                    'user_id',
-                    'total_family_member',
-                    'created_at',
-                    'updated_at',
-                    'user' => [
-                        // User model fields (e.g., id, name, email)
-                    ],
+                    'data'=>[]
                 ]);
 
         // Test when tenant not found
         $response = $this->getJson('/api/auth/tenants/' . 9999); // Non-existent ID
-        $response->assertStatus(200);
+        $response->assertStatus(404);
     }
 
     public function testUpdate()

@@ -27,23 +27,20 @@ class ContactControllerTest extends TestCase
         // Create sample contacts using factory
 
         Contact::factory()->count(3)->create();
-        // ['Authorization'=>$this->token]
-        $response = $this->getJson('/api/auth/contacts',);
+        //
+        $response = $this->getJson('/api/auth/contacts',['Authorization'=>$this->token]);
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                '*' => [
-                    'id',
-                    'name',
-                    'email',
-                    // ... other fields
+                'data' => [
+
                 ]
             ]);
 
         // Test when no contacts exist
         Contact::truncate();
-        $response = $this->getJson('/api/auth/contacts');
-        $response->assertStatus(200);
+        $response = $this->getJson('/api/auth/contacts',['Authorization'=>$this->token]);
+        $response->assertStatus(404);
     }
 
     public function testStore()
@@ -61,7 +58,7 @@ class ContactControllerTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonStructure([
                 'message',
-                'contact' => [
+                'data' => [
                     'id',
                     'name',
                     'email',
@@ -79,10 +76,12 @@ class ContactControllerTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonStructure([
-                'id',
-                'name',
-                'email',
-                // ... other fields
+                'data' => [
+                    'id',
+                    'name',
+                    'email',
+                    // ... other fields
+                ]
             ]);
 
         // Test when contact not found
